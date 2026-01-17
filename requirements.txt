@@ -1,0 +1,31 @@
+# RAG Explanation Project Requirements
+# Core scientific computing and ML libraries
+numpy>=1.21.0
+scikit-learn>=1.0.0
+
+# Text processing and NLP
+sentence-transformers>=2.2.0
+transformers>=4.21.0
+torch>=1.12.0  # Required by transformers
+spacy>=3.5.0
+
+# Vector databases
+chromadb>=0.4.0
+pinecone>=2.2.0
+weaviate-client>=3.20.0
+
+# Text processing and chunking
+langchain>=0.0.200
+rank-bm25>=0.2.0
+
+# Evaluation and metrics
+rouge-score>=0.1.2
+bert-score>=0.3.13
+
+# Optional: For advanced LLM features
+accelerate>=0.20.0
+datasets>=2.10.0
+
+# Development and testing
+pytest>=7.0.0
+jupyter>=1.0.0
