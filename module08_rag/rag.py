@@ -12,22 +12,19 @@ import numpy as np
 from typing import List, Dict, Any, Optional
 
 # Add parent directory to path for imports
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath('__file__'))))
 
 # Import our custom modules
 try:
     # Text processing
     from module06_text_processing.chunking import chunk_text, chunk_document
-
     # Embeddings
     from module03_embeddings_search.embeddings import get_embeddings
-
     # Vector database
     from module04_vector_databases.vector_databases import SimpleVectorDB
-
     # LLM integration
-    from module07_llm_prompting.llm import generate_text_simple
-
+    from module07_llm_prompting.llm import generate_text
+    
     FULL_IMPLEMENTATION = True
     print("✅ All modules imported successfully - Full RAG implementation available!")
 
@@ -35,114 +32,6 @@ except ImportError as e:
     print(f"⚠️  Some modules not available: {e}")
     print("🔄 Using fallback implementations...")
     FULL_IMPLEMENTATION = False
-
-    # Fallback implementations
-    def chunk_text(text: str, chunk_size: int = 500, overlap: int = 50) -> List[str]:
-        """Fallback text chunking"""
-        words = text.split()
-        chunks = []
-        for i in range(0, len(words), chunk_size - overlap):
-            chunk = ' '.join(words[i:i + chunk_size])
-            chunks.append(chunk)
-        return chunks
-
-    def get_embeddings(texts: List[str]) -> np.ndarray:
-        """Fallback embeddings using consistent dimensionality"""
-        # Use a fixed vocabulary for consistency
-        base_vocab = [
-            'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by',
-            'is', 'are', 'was', 'were', 'be', 'been', 'being', 'have', 'has', 'had', 'do', 'does',
-            'did', 'will', 'would', 'could', 'should', 'may', 'might', 'must', 'can', 'shall',
-            'this', 'that', 'these', 'those', 'i', 'you', 'he', 'she', 'it', 'we', 'they', 'me',
-            'him', 'her', 'us', 'them', 'my', 'your', 'his', 'its', 'our', 'their',
-            'what', 'when', 'where', 'why', 'how', 'who', 'which', 'whose',
-            'retrieval', 'augmented', 'generation', 'rag', 'vector', 'database', 'embedding',
-            'similarity', 'search', 'document', 'query', 'response', 'model', 'language',
-            'large', 'learning', 'machine', 'artificial', 'intelligence', 'ai', 'text',
-            'semantic', 'meaning', 'context', 'information', 'knowledge', 'system', 'pipeline'
-        ]
-
-        word_to_idx = {word: i for i, word in enumerate(base_vocab)}
-        embedding_dim = len(base_vocab)
-
-        embeddings = []
-        for text in texts:
-            vec = np.zeros(embedding_dim)
-            words = text.lower().split()
-            for word in words:
-                if word in word_to_idx:
-                    vec[word_to_idx[word]] += 1
-            # Normalize
-            norm = np.linalg.norm(vec)
-            if norm > 0:
-                vec = vec / norm
-            embeddings.append(vec)
-
-        return np.array(embeddings)
-
-    class SimpleVectorDB:
-        """Fallback vector database"""
-        def __init__(self):
-            self.vectors = []
-            self.metadata = []
-
-        def add_vector(self, vector: List[float], metadata: Dict[str, Any]):
-            self.vectors.append(np.array(vector))
-            self.metadata.append(metadata)
-
-        def search(self, query_vector: np.ndarray, top_k: int = 3) -> List[Dict[str, Any]]:
-            if not self.vectors:
-                return []
-
-            # Cosine similarity
-            similarities = []
-            query_vec = np.array(query_vector)
-
-            for i, vec in enumerate(self.vectors):
-                similarity = np.dot(query_vec, vec) / (np.linalg.norm(query_vec) * np.linalg.norm(vec))
-                similarities.append((similarity, i))
-
-            # Sort by similarity
-            similarities.sort(reverse=True, key=lambda x: x[0])
-
-            results = []
-            for sim, idx in similarities[:top_k]:
-                results.append({
-                    'metadata': self.metadata[idx],
-                    'similarity': sim
-                })
-
-            return results
-
-    def generate_text_simple(prompt: str, max_length: int = 100) -> str:
-        """Fallback text generation with more intelligent responses"""
-        prompt_lower = prompt.lower()
-
-        # Extract question from prompt
-        question = ""
-        if "question:" in prompt_lower:
-            question_part = prompt.split("QUESTION:")[1].split("RETRIEVED INFORMATION:")[0].strip()
-            question = question_part.lower()
-
-        # Generate context-aware responses
-        if 'rag' in question or 'retrieval augmented generation' in question:
-            return "Retrieval Augmented Generation (RAG) is a technique that combines retrieval systems with generative AI to provide accurate, contextually relevant responses by grounding them in external knowledge sources. It addresses limitations of large language models by retrieving relevant information before generating responses."
-
-        elif 'vector database' in question or 'vector databases' in question:
-            return "Vector databases are specialized storage systems designed to efficiently store and query high-dimensional vectors. They use similarity search algorithms to find vectors that are closest to a query vector, enabling fast retrieval of semantically similar content."
-
-        elif 'limitation' in question and 'language model' in question:
-            return "Large language models have several limitations including outdated knowledge, potential for hallucinations, lack of access to real-time information, and difficulty with domain-specific expertise. RAG addresses these by grounding responses in external, verifiable knowledge sources."
-
-        elif 'pipeline' in question and 'rag' in question:
-            return "The RAG pipeline consists of: 1) Document ingestion and preprocessing, 2) Text chunking, 3) Embedding generation, 4) Vector storage and indexing, 5) Retrieval based on similarity search, and 6) Response generation using retrieved context."
-
-        elif 'embedding' in question:
-            return "Text embeddings are dense vector representations that capture semantic meaning. They transform textual data into numerical vectors where similar meanings are represented by similar vectors, enabling mathematical operations on semantic concepts."
-
-        else:
-            return "Based on the retrieved information, I can provide a comprehensive answer to your question using the RAG approach that combines retrieval and generation for accurate, contextually relevant responses."
-
 
 class RAGSystem:
     """
@@ -275,7 +164,7 @@ Please provide a detailed answer based on the retrieved information above. If th
 """
 
         # Generate response using LLM
-        response = generate_text_simple(prompt)
+        response = generate_text(prompt)
 
         return response
 

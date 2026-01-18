@@ -152,6 +152,19 @@ chunks = custom_chunking(sample_text, chunk_size=150, overlap=30)
 for i, chunk in enumerate(chunks, 1):
     print(f"Chunk {i} ({len(chunk)} chars): {chunk[:60]}...")
 
+# Alias for backward compatibility
+def chunk_text(text: str, chunk_size: int = 500, overlap: int = 50) -> list:
+    """
+    Alias for custom_chunking function for backward compatibility.
+    """
+    return custom_chunking(text, chunk_size, overlap)
+
+def chunk_document(document: str, chunk_size: int = 500, overlap: int = 50) -> list:
+    """
+    Chunk a single document. Alias for chunk_text for consistency.
+    """
+    return chunk_text(document, chunk_size, overlap)
+
 # Overview of different chunking strategies:
 # - Fixed size: Simple but may break sentences - good for basic use cases
 # - Sentence-based: Respects linguistic boundaries - preserves meaning
